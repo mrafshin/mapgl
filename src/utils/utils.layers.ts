@@ -72,6 +72,7 @@ async function genPrimaryLayers({
             if (!(features as DeckLine[])?.length) continue;
 
             if (!isHyper) {
+                calculateEdgeTilts(features as any[]);
                 const props = {
                     ...layerProps,
                     srcGraphId,
@@ -206,6 +207,39 @@ function createDerivedLayers (visLayers: VisLayers, graph: Graph, isLogic, repla
 };
 
 
+
+function calculateEdgeTilts(features: any[]) {
+    const groups: Record<string, any[]> = {};
+
+    features.forEach(feature => {
+        const src = feature.source;
+        const tgt = feature.target;
+        if (!src || !tgt) return;
+
+        const k1 = `${src[0]},${src[1]}`;
+        const k2 = `${tgt[0]},${tgt[1]}`;
+        const key = k1 < k2 ? `${k1}-${k2}` : `${k2}-${k1}`;
+
+        if (!groups[key]) groups[key] = [];
+        groups[key].push(feature);
+    });
+
+    Object.values(groups).forEach(group => {
+        const count = group.length;
+        if (count <= 1) return;
+
+        const mid = (count - 1) / 2;
+        group.forEach((feature, i) => {
+            // Distribute tilts centered around 0
+            // e.g. 2 edges: -15, 15
+            // 3 edges: -30, 0, 30
+            // spread 30 degrees
+            const tilt = (i - mid) * 30; // 30 degrees spread
+            if (!feature.properties) feature.properties = {};
+            feature.properties.tilt = tilt;
+        });
+    });
+}
 
 export {
     genPrimaryLayers, initGroups, isVisible,  genVisLayers, createDerivedLayers

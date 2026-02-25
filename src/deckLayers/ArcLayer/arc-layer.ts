@@ -87,6 +87,7 @@ export const MyArcLayer = (props) => {
         data: lineFeatures,
         getWidth,
         getHeight,
+        getTilt: (d) => d.properties.tilt ?? 0,
         getSourceColor: (d: BartSegment) => getColor('sideA', d),
         getTargetColor: (d: BartSegment) => getColor('sideB', d),
         getFilterCategory: d => {
