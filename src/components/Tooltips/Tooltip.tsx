@@ -161,6 +161,11 @@ if (!x && !y && !coordinate) return
         const {parents}= props
         const adjacentEdges = parents?.map((e,i) => genLi(pickedNode, e, parents?.length>1 && i))
 
+        const connectedEdgesList = [...(props.inEdges || []), ...(props.outEdges || [])].map((edgeId, i) => {
+             const edge = graph?.nodeCollection?.getEdgesMap?.[edgeId];
+             if (!edge) return null;
+             return genLi(pickedNode, edge, i);
+        }).filter(Boolean);
 
         return (
             <>
@@ -187,6 +192,15 @@ if (!x && !y && !coordinate) return
                     </li>}
 
                     {adjacentEdges.length === 1 && adjacentEdges}
+
+                    {connectedEdgesList.length > 0 && (
+                        <>
+                            <li key="connected-header" style={{ fontWeight: 500, marginTop: '8px', marginBottom: '4px' }}>
+                                Connected Links
+                            </li>
+                            {connectedEdgesList}
+                        </>
+                    )}
 
                 </ul>
             </>
