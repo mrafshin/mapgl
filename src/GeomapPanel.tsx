@@ -34,6 +34,7 @@ interface State {
     hasYaScriptLoaded?: boolean;
     svgIcons?;
     isEditMode: boolean;
+    pendingEdits: Array<{ id: any; coordinates: [number, number] }>;
 }
 
 import {CMN_NAMESPACE} from 'mapLib/utils'
@@ -99,7 +100,8 @@ export class GeomapPanel extends Component<Props, State> {
             source: undefined,
             hasYaScriptLoaded: false,
             viewState: defViewState,
-            isEditMode: false
+            isEditMode: false,
+            pendingEdits: []
         };
 
         this.panelContext = {
@@ -343,6 +345,19 @@ export class GeomapPanel extends Component<Props, State> {
         return view;
     };
 
+    onNodesEdited = (edit: { id: any; coordinates: [number, number] }) => {
+        this.setState((prevState) => {
+            const index = prevState.pendingEdits.findIndex((e) => e.id === edit.id);
+            let newEdits;
+            if (index >= 0) {
+                newEdits = [...prevState.pendingEdits];
+                newEdits[index] = edit;
+            } else {
+                newEdits = [...prevState.pendingEdits, edit];
+            }
+            return { pendingEdits: newEdits };
+        });
+    };
 
     render() {
         if (!this.state.authReady) {
@@ -351,7 +366,7 @@ export class GeomapPanel extends Component<Props, State> {
 
 
         const { data, options, replaceVariables, fieldConfig, eventBus } = this.props;
-        const { isEditMode } = this.state;
+        const { isEditMode, pendingEdits } = this.state;
 
         return (
             <div style={{ width: '100%', height: '100%', position: 'relative' }}>
@@ -387,7 +402,7 @@ export class GeomapPanel extends Component<Props, State> {
                         display: 'flex',
                         gap: '10px'
                     }}>
-                        <Button variant="primary" disabled={true} size="sm">Save Changes</Button>
+                        <Button variant="primary" disabled={pendingEdits.length === 0} size="sm">Save Changes</Button>
                         <Button variant="secondary" onClick={() => this.setState({ isEditMode: false })} size="sm">Cancel</Button>
                     </div>
                 )}
@@ -405,7 +420,9 @@ export class GeomapPanel extends Component<Props, State> {
                                 eventBus,
                                 options,
                                 data,
-                                isEditMode
+                                isEditMode,
+                                pendingEdits,
+                                onNodesEdited: this.onNodesEdited
                             }}/>
                     </RootStoreProvider>
                 </PanelContextProvider>}

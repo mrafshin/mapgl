@@ -15,7 +15,7 @@ import {
 } from '@grafana/ui';
 import {observer} from 'mobx-react-lite';
 import DeckGL from '@deck.gl/react';
-import MapLibre, {AttributionControl} from "@vis.gl/react-maplibre"
+import MapLibre, {AttributionControl, Marker} from "@vis.gl/react-maplibre"
 
 import {
     colTypes,
@@ -52,7 +52,7 @@ import {ThresholdEdgeChangeEvent} from "../utils/bus.events";
 import {ComFeature} from "mapLib/utils";
 
 
-const Mapgl = ({panel, annots, initMapRef, fieldConfig, source, options, data, replaceVariables, eventBus, isEditMode}) => {
+const Mapgl = ({panel, annots, initMapRef, fieldConfig, source, options, data, replaceVariables, eventBus, isEditMode, pendingEdits, onNodesEdited}) => {
     const {pointStore, viewStore} = useRootStore();
     const {setVisRefresh: setMobxLegendRefresh} = viewStore
 
@@ -535,6 +535,57 @@ if (!isLogic) {
     widgets.push(new CompassWidget({id: 'compass', placement: 'top-right', className: s.compass}),)
 }
 
+    const renderEditableMarkers = () => {
+        if (!panel.graph || !panel.graph.positionRanges) {
+            return null;
+        }
+        const markers: any[] = [];
+        const { positionRanges } = panel.graph;
+        const { features, positions } = panel;
+
+        for (const [start, end] of positionRanges) {
+            for (let i = start; i < end; i++) {
+                const feature = features[i];
+                if (!feature) {
+                    continue;
+                }
+
+                const pending = pendingEdits?.find((e: any) => e.id === feature.id);
+                const longitude = pending ? pending.coordinates[0] : positions[i * 2];
+                const latitude = pending ? pending.coordinates[1] : positions[i * 2 + 1];
+
+                if (longitude === undefined || latitude === undefined) {
+                    continue;
+                }
+
+                markers.push(
+                    <Marker
+                        key={feature.id}
+                        longitude={longitude}
+                        latitude={latitude}
+                        draggable={true}
+                        onDragEnd={(evt) => {
+                            const { lng, lat } = evt.lngLat;
+                            if (onNodesEdited) {
+                                onNodesEdited({ id: feature.id, coordinates: [lng, lat] });
+                            }
+                        }}
+                    >
+                        <div style={{
+                            width: '12px',
+                            height: '12px',
+                            backgroundColor: 'white',
+                            border: '2px solid #33a2e5',
+                            borderRadius: '50%',
+                            cursor: 'pointer'
+                        }} />
+                    </Marker>
+                );
+            }
+        }
+        return markers;
+    };
+
 ///// return
     return (
         <div className={s.container} ref={containerRef}>
@@ -570,6 +621,7 @@ if (!isLogic) {
                     attributionControl={false}>
                     <AttributionControl
                         style={{zIndex: '2', position: 'absolute', top: 5, right: theme2.spacing(1.5)}}/>
+                    {isEditMode && renderEditableMarkers()}
                 </MapLibre>}
 
             </DeckGL>
