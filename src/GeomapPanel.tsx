@@ -1,8 +1,8 @@
 import * as React from 'react';
 import { Component } from 'react';
 import {Subscription} from 'rxjs';
-import {GrafanaTheme2, PanelData, PanelProps} from '@grafana/data';
-import {config} from '@grafana/runtime';
+import {GrafanaTheme2, PanelData, PanelProps, AppEvents} from '@grafana/data';
+import {config, getBackendSrv, getAppEvents} from '@grafana/runtime';
 import {PanelContext, PanelContextProvider, PanelContextRoot, Button, Switch} from '@grafana/ui';
 import {Options, MapLayerState, MapViewConfig} from './types';
 import {defViewState, ViewState} from "mapLib/utils";
@@ -359,6 +359,38 @@ export class GeomapPanel extends Component<Props, State> {
         });
     };
 
+    saveNodeCoordinates = async () => {
+        const { pendingEdits } = this.state;
+        const { saveApiUrl } = this.props.options.common;
+        const appEvents = getAppEvents();
+
+        if (pendingEdits.length === 0) {
+            return;
+        }
+
+        if (!saveApiUrl) {
+            appEvents.publish({
+                type: AppEvents.alertWarning.name,
+                payload: ['Save API URL not configured'],
+            });
+            return;
+        }
+
+        try {
+            await getBackendSrv().post(saveApiUrl, pendingEdits);
+            this.setState({ pendingEdits: [], isEditMode: false });
+            appEvents.publish({
+                type: AppEvents.alertSuccess.name,
+                payload: ['Changes saved successfully'],
+            });
+        } catch (error: any) {
+            appEvents.publish({
+                type: AppEvents.alertError.name,
+                payload: ['Failed to save changes', error.message],
+            });
+        }
+    };
+
     render() {
         if (!this.state.authReady) {
             return <div>Authorizing…(F5,F12)</div>; // blocks other logic
@@ -402,7 +434,7 @@ export class GeomapPanel extends Component<Props, State> {
                         display: 'flex',
                         gap: '10px'
                     }}>
-                        <Button variant="primary" disabled={pendingEdits.length === 0} size="sm">Save Changes</Button>
+                        <Button variant="primary" onClick={this.saveNodeCoordinates} disabled={pendingEdits.length === 0} size="sm">Save Changes</Button>
                         <Button variant="secondary" onClick={() => this.setState({ isEditMode: false })} size="sm">Cancel</Button>
                     </div>
                 )}

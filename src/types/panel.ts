@@ -78,6 +78,7 @@ export interface Options {
     isShowEdgeLegend: boolean,
     isShowSwitcher: boolean,
     isAppAuth: boolean;
+    saveApiUrl?: string;
   };
   dataLayers: ExtendMapLayerOptions[];
 }

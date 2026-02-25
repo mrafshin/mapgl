@@ -127,6 +127,13 @@ export const plugin = new PanelPlugin<Options>(GeomapPanel)
                 //description: '',
                 settings: {},
             })
+        .addTextInput({
+            category: ['Other'],
+            path: 'common.saveApiUrl',
+            name: 'Save API Endpoint',
+            description: 'URL to POST node coordinates to',
+            settings: {},
+        })
 
 })
     .setDataSupport({
