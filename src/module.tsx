@@ -127,6 +127,34 @@ export const plugin = new PanelPlugin<Options>(GeomapPanel)
                 //description: '',
                 settings: {},
             })
+        .addBooleanSwitch({
+            category: ['Other'],
+            path: 'common.jitterPoints',
+            name: 'Jitter points',
+            description: 'Apply random offset to point coordinates',
+            defaultValue: false,
+        })
+        .addBooleanSwitch({
+            category: ['Other'],
+            path: 'common.isAppAuth',
+            name: 'App Authentication',
+            description: 'Enable app authentication check',
+            defaultValue: false,
+        })
+        .addTextInput({
+            category: ['Other'],
+            path: 'common.nsPrefix',
+            name: 'Namespace prefix',
+            description: 'Prefix for node namespace',
+            defaultValue: '',
+        })
+        .addBooleanSwitch({
+             category: ['Other'],
+             path: 'updatesLog',
+             name: 'Log updates',
+             description: 'Log panel updates to console',
+             defaultValue: false
+        })
 
 })
     .setDataSupport({

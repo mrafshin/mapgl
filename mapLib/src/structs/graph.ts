@@ -521,6 +521,7 @@ export class Graph extends Node {
 
    const panel = this.root.panel
    const positions = panel.positions;
+   const pairCounts = new Map<string, number>();
 
     this.wasm2Edges.forEach((edges, i ) => {
         if (!edges.length) {return}
@@ -620,6 +621,21 @@ export class Graph extends Node {
       /// Arcs
             const {arcStyle} = srcFeatureProps
             const heightCoef = arcStyle?.arcConfig.height
+            const tiltIncrement = arcStyle?.arcConfig?.tiltIncrement ?? 0;
+
+            const srcId = edge.source.id;
+            const tgtId = edge.target.id;
+            const pairId = [srcId, tgtId].sort().join('--');
+            let count = pairCounts.get(pairId) || 0;
+            pairCounts.set(pairId, count + 1);
+
+            let tilt = 0;
+            if (tiltIncrement !== 0 && count > 0) {
+                const n = Math.ceil(count / 2.0);
+                const tiltIndex = (count % 2 === 1) ? n : -n;
+                tilt = tiltIndex * tiltIncrement;
+            }
+
             const options = {units: 'meters' as Units}; // or 'miles', 'degrees', 'radians'
 
         function distance2D(a: number[], b: number[]) {
@@ -640,7 +656,8 @@ export class Graph extends Node {
                 targetPosition,
                 midPoint,
                 properties: srcFeatureProps,
-                edgeId: edge.id
+                edgeId: edge.id,
+                tilt
             };
         if (!arcsFeatures[srcGraph.id]) {
             arcsFeatures[srcGraph.id] = [];

@@ -78,7 +78,9 @@ export interface Options {
     isShowEdgeLegend: boolean,
     isShowSwitcher: boolean,
     isAppAuth: boolean;
+    isMeters: boolean;
   };
+  updatesLog: boolean;
   dataLayers: ExtendMapLayerOptions[];
 }
 

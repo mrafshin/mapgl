@@ -160,7 +160,9 @@ export class GeomapPanel extends Component<Props, State> {
     }
 
     componentDidUpdate(prevProps: Props) {
-        //console.log('did update')
+        if (this.props.options.updatesLog) {
+            console.log('GeomapPanel componentDidUpdate', this.props);
+        }
 
         // Check for a difference between previous data and component data
         if (this.map && this.props.data !== prevProps.data) {
@@ -244,6 +246,9 @@ export class GeomapPanel extends Component<Props, State> {
                 runLayout(this)
             }
 
+            if (this.props.options.common?.jitterPoints) {
+                this.applyJitter()
+            }
         }
 
         const viewState = this.initMapView(this.props.options.view);
@@ -301,6 +306,9 @@ export class GeomapPanel extends Component<Props, State> {
                 runLayout(this)
              }
 
+            if (options.common?.jitterPoints) {
+                this.applyJitter()
+            }
 
             this.visLayers = genVisLayers(this, this.props)
 
@@ -321,6 +329,28 @@ export class GeomapPanel extends Component<Props, State> {
 
     };
 
+
+    applyJitter = () => {
+        const positions = this.positions;
+        const amount = this.isLogic ? 2 : 0.00005;
+
+        const random = (seed) => {
+            var x = Math.sin(seed++) * 10000;
+            return x - Math.floor(x);
+        }
+
+        for(let i=0; i<positions.length; i+=2) {
+            const x = positions[i];
+            const y = positions[i+1];
+            if (x===0 && y===0) continue;
+
+            const r1 = random(i) - 0.5;
+            const r2 = random(i+1) - 0.5;
+
+            positions[i] = x + r1 * amount;
+            positions[i+1] = y + r2 * amount;
+        }
+    }
 
     initMapView = (config: MapViewConfig): ViewState | undefined => {
         let view = {

@@ -44,6 +44,7 @@ export interface MarkersConfig {
   },
   arcConfig: {
     height: number,
+    tiltIncrement: number,
     capacity: { field?: string, fixed: number },
   },
   groups?: Rule[],
@@ -66,6 +67,7 @@ const defaultOptions: MarkersConfig = {
   },
   arcConfig: {
     height: 0.5,
+    tiltIncrement: 7,
     capacity: { fixed: 1 }
   },
   showStat2: false,
@@ -661,6 +663,14 @@ export const markersLayer: ExtendMapLayerRegistryItem<MarkersConfig> = {
                     min: 0,
                     max: 1,
                   },
+                })
+                .addNumberInput({
+                  category: ['Arc Styles'],
+                  path: 'config.arcConfig.tiltIncrement',
+                  name: 'Tilt increment',
+                  description: 'Degrees',
+                  defaultValue: defaultOptions.arcConfig.tiltIncrement,
+                  showIf: (opts) => opts.config.showStat2 && (!!opts.parField || useMockData),
                 })
                 .addCustomEditor({
                   id: 'config.arcStyle.capacity',

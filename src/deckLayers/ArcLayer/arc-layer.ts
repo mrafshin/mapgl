@@ -106,6 +106,7 @@ export const MyArcLayer = (props) => {
         widthScale: 1,
         widthMinPixels: 0.1,
         //lineWidthMaxPixels: 15,
+        getTilt: (d) => d.tilt ?? 0,
         // Interactive props
         pickable,
         autoHighlight,
