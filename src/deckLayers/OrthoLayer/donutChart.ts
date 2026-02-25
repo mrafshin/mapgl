@@ -24,8 +24,15 @@ function createDonutChart({colorCounts, radius = 45, userSvgUrl}) {
   const r0 = Math.round(r * 0.73);
   const w = r * 2;
 
+  // Stats list configuration
+  const fontSize = 12;
+  const lineHeight = 14;
+  const listMarginTop = 5;
+  const listHeight = counts.length * lineHeight + listMarginTop;
+  const totalHeight = w + listHeight;
+
   let svg = `
-  <svg width='${w*2}' height='${w*2}' stroke-width='1' viewBox='0 0 ${w} ${w}' 
+  <svg width='${w}' height='${totalHeight}' stroke-width='1' viewBox='0 0 ${w} ${totalHeight}'
   xmlns='http://www.w3.org/2000/svg'  
   >`;
 
@@ -64,9 +71,22 @@ function createDonutChart({colorCounts, radius = 45, userSvgUrl}) {
   `;
   }
 
+  // Render stats list
+  if (counts.length > 0) {
+      let yPos = w + listMarginTop + fontSize;
+      for (let i = 0; i < counts.length; i++) {
+          const color = colors[i];
+          const count = counts[i].count; // Or formatted value if available
+          // Simple legend: Color Box + Value. For simplicity, just text with color.
+          // Centered text
+          svg += `<text x="${w / 2}" y="${yPos}" fill="${color}" font-family="sans-serif" font-size="${fontSize}" text-anchor="middle" dominant-baseline="bottom">${color}</text>`;
+          yPos += lineHeight;
+      }
+  }
+
   svg += `</svg>`;
 
-  return svg;
+  return { svg, width: w, height: totalHeight, aspect: totalHeight / w };
 }
 
 function donutSegment(start, end, r, r0, color) {

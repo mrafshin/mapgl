@@ -135,14 +135,15 @@ export default class OrthoLayer <
             //const selId = this.getSelectedNode?.id
             //const isHead = selId === d.properties.locName
             const diam =  size //isHead ? size * 1.3 : size
+            const { svg, width, height } = createDonutChart({
+                colorCounts,
+                radius: diam*2,///2 ,
+                userSvgUrl: svgIcon? svgIcon.svgDataUrl : null // embed user SVG
+            });
             const icon = {
-                url: svgToDataURL(createDonutChart({
-                    colorCounts,
-                    radius: diam*2,///2 ,
-                    userSvgUrl: svgIcon? svgIcon.svgDataUrl : null // embed user SVG
-                })),
-                width: diam*4,
-                height: diam*4
+                url: svgToDataURL(svg),
+                width: width * 2, // Scale up for retina/crispness
+                height: height * 2
             };
             return icon;
         } else if (svgIcon) {

@@ -84,14 +84,15 @@ const categorySize = 1
             const isHead = selId === d.properties.locName
             const size = d.properties.style?.size
             const diam =  isHead ? size * 1.3 : size
-            const icon = {
-              url: svgToDataURL(createDonutChart({
+            const { svg, width, height } = createDonutChart({
                 colorCounts,
                 radius: diam/2,
                 userSvgUrl: svgIcon? svgIcon.svgDataUrl : null // embed user SVG
-              })),
-              width: diam*2,
-              height: diam*2
+            });
+            const icon = {
+              url: svgToDataURL(svg),
+              width,
+              height
             };
             return icon;
           } else if (svgIcon) {
