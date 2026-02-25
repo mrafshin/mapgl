@@ -79,6 +79,7 @@ export interface Options {
     isShowSwitcher: boolean,
     isAppAuth: boolean;
     saveApiUrl?: string;
+    liveChannel?: string;
   };
   dataLayers: ExtendMapLayerOptions[];
 }

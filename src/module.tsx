@@ -134,6 +134,13 @@ export const plugin = new PanelPlugin<Options>(GeomapPanel)
             description: 'URL to POST node coordinates to',
             settings: {},
         })
+        .addTextInput({
+            category: ['Other'],
+            path: 'common.liveChannel',
+            name: 'Grafana Live Channel',
+            description: 'e.g., stream/mapgl/alerts',
+            settings: {},
+        })
 
 })
     .setDataSupport({

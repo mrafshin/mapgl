@@ -52,7 +52,7 @@ import {ThresholdEdgeChangeEvent} from "../utils/bus.events";
 import {ComFeature} from "mapLib/utils";
 
 
-const Mapgl = ({panel, annots, initMapRef, fieldConfig, source, options, data, replaceVariables, eventBus, isEditMode, pendingEdits, onNodesEdited}) => {
+const Mapgl = ({panel, annots, initMapRef, fieldConfig, source, options, data, replaceVariables, eventBus, isEditMode, pendingEdits, onNodesEdited, liveOverrides}) => {
     const {pointStore, viewStore} = useRootStore();
     const {setVisRefresh: setMobxLegendRefresh} = viewStore
 
@@ -363,11 +363,11 @@ const Mapgl = ({panel, annots, initMapRef, fieldConfig, source, options, data, r
                     colors,
                     muted,
                     annots,
-                    groupIndices
+                    groupIndices,
+                    features
                 } = panel
 
                 const {positionRanges} = g
-                const {features} = panel
 
                 if (!features?.length) {
                     return null
@@ -396,7 +396,19 @@ const Mapgl = ({panel, annots, initMapRef, fieldConfig, source, options, data, r
                     cutGroupIndices.set(groupIndices.subarray(start, end), offset);
 
                     for (let i = start; i < end; i++) {
-                        featureIds.value[offset++] = i;  // `i` is your global index
+                        featureIds.value[offset++] = i;
+                    }
+
+                    if (liveOverrides) {
+                        for (let i = start; i < end; i++) {
+                            const feature = features[i];
+                            const overrideColor = liveOverrides[feature?.id];
+                            if (overrideColor) {
+                                const rgba = toRGB4Array(overrideColor, 1).map(c => c * 255);
+                                const localOffset = offset - (end - start) + (i - start);
+                                cutAnnots.set(rgba, localOffset * 4);
+                            }
+                        }
                     }
                 }
 
@@ -473,6 +485,7 @@ const Mapgl = ({panel, annots, initMapRef, fieldConfig, source, options, data, r
         time,
         getViewState,
         visRefresh,
+        liveOverrides,
     ]);
 
     const memoLayerSwitcher = useMemo(() => {

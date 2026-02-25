@@ -2,7 +2,7 @@ import * as React from 'react';
 import { Component } from 'react';
 import {Subscription} from 'rxjs';
 import {GrafanaTheme2, PanelData, PanelProps, AppEvents} from '@grafana/data';
-import {config, getBackendSrv, getAppEvents} from '@grafana/runtime';
+import {config, getBackendSrv, getAppEvents, getGrafanaLiveSrv} from '@grafana/runtime';
 import {PanelContext, PanelContextProvider, PanelContextRoot, Button, Switch} from '@grafana/ui';
 import {Options, MapLayerState, MapViewConfig} from './types';
 import {defViewState, ViewState} from "mapLib/utils";
@@ -35,6 +35,7 @@ interface State {
     svgIcons?;
     isEditMode: boolean;
     pendingEdits: Array<{ id: any; coordinates: [number, number] }>;
+    liveOverrides: Record<string, string>;
 }
 
 import {CMN_NAMESPACE} from 'mapLib/utils'
@@ -101,7 +102,8 @@ export class GeomapPanel extends Component<Props, State> {
             hasYaScriptLoaded: false,
             viewState: defViewState,
             isEditMode: false,
-            pendingEdits: []
+            pendingEdits: [],
+            liveOverrides: {}
         };
 
         this.panelContext = {
@@ -133,6 +135,37 @@ export class GeomapPanel extends Component<Props, State> {
         this.panelContext = {...this.context, ...this.panelContext};
         this.visLayers = new VisLayers()
         this.setState({authReady: true})
+
+        if (this.props.options.common?.liveChannel) {
+            this.subscribeToLive(this.props.options.common.liveChannel);
+        }
+    }
+
+    subscribeToLive(channel: string) {
+        if (!channel) return;
+
+        const stream = getGrafanaLiveSrv().getStream({
+            scope: 'grafana',
+            namespace: 'stream',
+            path: channel, // Adjust based on how channel is provided, usually 'stream/...'
+        });
+
+        const sub = stream.subscribe({
+            next: (event: any) => {
+                if (event?.nodeId && event?.statusColor) {
+                    this.setState(prevState => ({
+                        liveOverrides: {
+                            ...prevState.liveOverrides,
+                            [event.nodeId]: event.statusColor
+                        }
+                    }));
+                }
+            },
+            error: (err) => {
+                console.error('Live stream error:', err);
+            }
+        });
+        this.subs.add(sub);
     }
 
     componentWillUnmount() {
@@ -174,6 +207,17 @@ export class GeomapPanel extends Component<Props, State> {
         // Check for a difference between previous data and component data
         if (this.map && this.props.data !== prevProps.data) {
             this.dataChanged(this.props.data);
+        }
+
+        const oldChannel = prevProps.options.common?.liveChannel;
+        const newChannel = this.props.options.common?.liveChannel;
+        if (oldChannel !== newChannel) {
+            this.subs.unsubscribe();
+            this.subs = new Subscription();
+            this.setState({ liveOverrides: {} });
+            if (newChannel) {
+                this.subscribeToLive(newChannel);
+            }
         }
     }
 
@@ -361,7 +405,7 @@ export class GeomapPanel extends Component<Props, State> {
 
     saveNodeCoordinates = async () => {
         const { pendingEdits } = this.state;
-        const { saveApiUrl } = this.props.options.common;
+        const saveApiUrl = this.props.options.common?.saveApiUrl;
         const appEvents = getAppEvents();
 
         if (pendingEdits.length === 0) {
@@ -454,7 +498,8 @@ export class GeomapPanel extends Component<Props, State> {
                                 data,
                                 isEditMode,
                                 pendingEdits,
-                                onNodesEdited: this.onNodesEdited
+                                onNodesEdited: this.onNodesEdited,
+                                liveOverrides: this.state.liveOverrides
                             }}/>
                     </RootStoreProvider>
                 </PanelContextProvider>}
