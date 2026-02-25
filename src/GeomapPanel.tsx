@@ -3,7 +3,7 @@ import { Component } from 'react';
 import {Subscription} from 'rxjs';
 import {GrafanaTheme2, PanelData, PanelProps} from '@grafana/data';
 import {config} from '@grafana/runtime';
-import {PanelContext, PanelContextProvider, PanelContextRoot} from '@grafana/ui';
+import {PanelContext, PanelContextProvider, PanelContextRoot, Button, Switch} from '@grafana/ui';
 import {Options, MapLayerState, MapViewConfig} from './types';
 import {defViewState, ViewState} from "mapLib/utils";
 import {notifyPanelEditor} from "./utils/geomap_utils";
@@ -33,6 +33,7 @@ interface State {
     source: string | {} | undefined;
     hasYaScriptLoaded?: boolean;
     svgIcons?;
+    isEditMode: boolean;
 }
 
 import {CMN_NAMESPACE} from 'mapLib/utils'
@@ -93,7 +94,13 @@ export class GeomapPanel extends Component<Props, State> {
         }
 
         this.locLabelName = locLabelName
-        this.state = {authReady: false, source: undefined, hasYaScriptLoaded: false, viewState: defViewState};
+        this.state = {
+            authReady: false,
+            source: undefined,
+            hasYaScriptLoaded: false,
+            viewState: defViewState,
+            isEditMode: false
+        };
 
         this.panelContext = {
             onToggleSeriesVisibility: undefined,
@@ -344,26 +351,65 @@ export class GeomapPanel extends Component<Props, State> {
 
 
         const { data, options, replaceVariables, fieldConfig, eventBus } = this.props;
+        const { isEditMode } = this.state;
 
         return (
-            <>
-            {this.panelContext && <PanelContextProvider value={this.panelContext}>
-            <RootStoreProvider props={{ panel: this, viewState: this.state.viewState, fieldConfig, replaceVariables, eventBus, data, options, }} >
-                    <Mapgl
-                        {...{
-                            panel: this,
-                            annots: this.annotations,
-                            initMapRef: this.initMapRef,
-                            source: this.layers?.[0]?.layer,
-                            fieldConfig,
-                            replaceVariables,
-                            eventBus,
-                            options,
-                            data
-                        }}/>
-            </RootStoreProvider>
+            <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+                <div style={{
+                    position: 'absolute',
+                    top: 10,
+                    left: 10,
+                    zIndex: 1000,
+                    background: 'rgba(0,0,0,0.5)',
+                    padding: '5px',
+                    borderRadius: '4px',
+                    display: 'flex',
+                    gap: '10px',
+                    alignItems: 'center'
+                }}>
+                    <Switch
+                        value={isEditMode}
+                        onChange={(e) => this.setState({ isEditMode: e.currentTarget.checked })}
+                        label=""
+                    />
+                    <span style={{ color: 'white', fontSize: '12px' }}>Enable Edit Mode</span>
+                </div>
+
+                {isEditMode && (
+                    <div style={{
+                        position: 'absolute',
+                        top: 50,
+                        left: 10,
+                        zIndex: 1000,
+                        background: 'rgba(0,0,0,0.5)',
+                        padding: '10px',
+                        borderRadius: '4px',
+                        display: 'flex',
+                        gap: '10px'
+                    }}>
+                        <Button variant="primary" disabled={true} size="sm">Save Changes</Button>
+                        <Button variant="secondary" onClick={() => this.setState({ isEditMode: false })} size="sm">Cancel</Button>
+                    </div>
+                )}
+
+                {this.panelContext && <PanelContextProvider value={this.panelContext}>
+                    <RootStoreProvider props={{ panel: this, viewState: this.state.viewState, fieldConfig, replaceVariables, eventBus, data, options, }} >
+                        <Mapgl
+                            {...{
+                                panel: this,
+                                annots: this.annotations,
+                                initMapRef: this.initMapRef,
+                                source: this.layers?.[0]?.layer,
+                                fieldConfig,
+                                replaceVariables,
+                                eventBus,
+                                options,
+                                data,
+                                isEditMode
+                            }}/>
+                    </RootStoreProvider>
                 </PanelContextProvider>}
-            </>
+            </div>
         );
     }
 }

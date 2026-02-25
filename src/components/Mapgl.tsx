@@ -52,7 +52,7 @@ import {ThresholdEdgeChangeEvent} from "../utils/bus.events";
 import {ComFeature} from "mapLib/utils";
 
 
-const Mapgl = ({panel, annots, initMapRef, fieldConfig, source, options, data, replaceVariables, eventBus}) => {
+const Mapgl = ({panel, annots, initMapRef, fieldConfig, source, options, data, replaceVariables, eventBus, isEditMode}) => {
     const {pointStore, viewStore} = useRootStore();
     const {setVisRefresh: setMobxLegendRefresh} = viewStore
 
