@@ -58,7 +58,7 @@ export default class OrthoLayer <
         this.SVG =  isVisible(props.getVisLayers, {index: null, name: colTypes.SVG, group:colTypes.SVG});
         this.Label = isVisible(props.getVisLayers, {index: null, name: colTypes.Label, group:colTypes.Label});
 
-        this.categories = props.getVisLayers.getCategories()
+        this.categories = props.filterCategories ?? props.getVisLayers.getCategories()
 
         this.getIcon = this.getIcon.bind(this)
         this.getIconSize = this.getIconSize.bind(this)

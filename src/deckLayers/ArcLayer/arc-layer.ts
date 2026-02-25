@@ -22,10 +22,11 @@ export const MyArcLayer = (props) => {
         getVisLayers,
         getGroupsLegend,
         getSelEdges,
-        visible
+        visible,
+        activeCategories
     } = props;
 
-    const categories= getVisLayers.getCategories()
+    const categories= activeCategories ?? getVisLayers.getCategories()
     const categorySize = 1
 
     type BartSegment = {

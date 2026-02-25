@@ -93,6 +93,22 @@ const Mapgl = ({panel, annots, initMapRef, fieldConfig, source, options, data, r
     const [time, setTime] = useState<any>(data.timeRange?.to.unix() * 1000);
     const [edgeLegend, setEdgeLegend] = useState<VizLegendItem[]>([])
     const hasAnnots = !!data.annotations?.length
+    const [activeLegendItems, setActiveLegendItems] = useState<Record<string, boolean>>({});
+
+    useEffect(() => {
+        if (getGroupsLegend?.length) {
+            const initialActive = {};
+            getGroupsLegend.forEach(item => {
+                const key = item.data?.rawLabel ?? item.label;
+                if (activeLegendItems[key] === undefined) {
+                    initialActive[key] = true;
+                } else {
+                    initialActive[key] = activeLegendItems[key];
+                }
+            });
+            setActiveLegendItems(initialActive);
+        }
+    }, [getGroupsLegend]);
 
     useEffect(() => {
         if (!time || !annots?.length) {
@@ -236,6 +252,7 @@ const Mapgl = ({panel, annots, initMapRef, fieldConfig, source, options, data, r
         theme: theme2,
         baseLayer: panel.layers?.[0],
         isLogic,
+        activeCategories: Object.keys(activeLegendItems).filter(k => activeLegendItems[k])
         //</editor-fold>
     };
 
@@ -526,13 +543,27 @@ const Mapgl = ({panel, annots, initMapRef, fieldConfig, source, options, data, r
     const memoLegend = useMemo(()=> {
         if (!getGroupsLegend?.length) {return null}
 
+        const items = getGroupsLegend.filter((item,i)=>item.data.count || hasAnnots && i === getGroupsLegend.length-1).map(item => {
+            const key = item.data?.rawLabel ?? item.label;
+            return {
+                ...item,
+                disabled: !activeLegendItems[key]
+            }
+        });
+
         return (
                 <div className={s.nodesLegend}>
-                <VizLegend displayMode={LegendDisplayMode.List} placement="bottom" items={getGroupsLegend.filter((item,i)=>item.data.count || hasAnnots && i === getGroupsLegend.length-1)}
-                           onLabelClick={()=> {}}/>
+                <VizLegend displayMode={LegendDisplayMode.List} placement="bottom" items={items}
+                           onLabelClick={(updatedItem)=> {
+                               const key = updatedItem.data?.rawLabel ?? updatedItem.label;
+                               setActiveLegendItems(prev => ({
+                                   ...prev,
+                                   [key]: !prev[key]
+                               }));
+                           }}/>
                 </div>
                 )
-    }, [getGroupsLegend])
+    }, [getGroupsLegend, activeLegendItems])
 
 
     const views = isLogic ? [new OrbitView({id: '3d-scene', controller: true})] : [new MapView({id: 'geo-view', controller: true})]

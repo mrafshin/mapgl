@@ -38,6 +38,7 @@ async function genPrimaryLayers({
         isHyper,
         panel,
         isLogic,
+        activeCategories
     } = layerProps
 
     const icons: (GeoJsonLayer | OrthoLayer)[] = []
@@ -52,12 +53,14 @@ async function genPrimaryLayers({
                     new OrthoLayer({
                         ...layerProps,
                         biCol: col,
-                        visible: showGraph
+                        visible: showGraph,
+                        filterCategories: activeCategories
                     })
                     : nodeLayer({
                         ...layerProps,
                         biCol: col,
                         visible: showGraph,
+                        activeCategories
                     })
             );
     }
@@ -78,6 +81,7 @@ async function genPrimaryLayers({
                     srcGraphId,
                     lineFeatures: features,
                     visible,
+                    activeCategories
                 };
 
                 lines.push(MyArcLayer(props));

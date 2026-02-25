@@ -18,7 +18,8 @@ const NodesGeojsonLayer = (props) => {
     svgIcons,
     isLogic,
     getVisLayers,
-    visible
+    visible,
+    activeCategories
   } = props;
 
 const Circle = isVisible(getVisLayers, {index: null, name: colTypes.Circle, group: colTypes.Circle});
@@ -138,7 +139,7 @@ const categorySize = 1
       const {style, layerName} = d.properties || {}
       return layerName
     },
-        filterCategories: categories,
+        filterCategories: activeCategories ?? categories,
         extensions: [new DataFilterExtension({categorySize})],
         _subLayerProps: {
           "points-text": {
